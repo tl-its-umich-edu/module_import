@@ -1,0 +1,51 @@
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: on-failure
+    command: ['--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci', '--socket=/tmp/mysql.sock']
+    #env_file:
+    #  - .env
+    environment:
+      - MYSQL_ROOT_PASSWORD=module_import_root_pwd
+      - MYSQL_DATABASE=module_import_local
+      - MYSQL_USER=module_import_user
+      - MYSQL_PASSWORD=module_import_pwd
+      - MYSQL_HOST=module_import_mysql_host
+      - MYSQL_PORT=3306
+    ports:
+      - "4306:3306"
+    volumes:
+      - ./.data/mysql:/var/lib/mysql
+    container_name: module_import_mysql_host
+
+  redis:
+    image: redis:7
+    command: redis-server --stop-writes-on-bgsave-error no --save ""
+    # This is to simulate an Openshift container with no write permission except to /tmp
+    read_only: true
+    tmpfs:
+        - /tmp
+    volumes:
+        - module_import-redis-data:/data:ro
+    container_name: module_import_redis_host
+
+  web:
+    build: 
+      context: .
+      args:
+          TZ: ${TZ}
+    command: bash -c "./start.sh"
+    volumes:
+      - .:/code
+    ports:
+      - "6000:6000"
+      - "6020:6020"
+    depends_on:
+      - mysql
+    env_file:
+      - .env
+    container_name: module_import_web
+
+volumes:
+  module_import-redis-data:

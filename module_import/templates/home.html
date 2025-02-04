@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'home.css' %}" />
+    <style>
+        /* Add indentation for nested checkboxes */
+        .indented {
+            margin-left: 20px; /* Adjust the value to control indentation */
+        }
+    </style>
+    <script>
+        // Function to handle dropdown selection and send data to API endpoint
+        async function handleDropdownChange() {
+            const selectElement = document.getElementById('dropdown');
+            const selectedValue = selectElement.value;
+
+            if (selectedValue) {
+                try {
+                    const response = await fetch('/api/submit-selection/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken') // CSRF protection
+                        },
+                        body: JSON.stringify({ selected_option: selectedValue })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        const modules = data.message;
+                        displayCheckboxList(modules);
+                    } else {
+                        alert('Failed to submit selection');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error connecting to the server');
+                }
+            }
+        }
+        
+        // Function to display checkbox list dynamically
+        function displayCheckboxList(modules) {
+            const checkboxContainer = document.getElementById('checkbox-container');
+            checkboxContainer.innerHTML = ''; // Clear previous checkboxes
+
+            modules.forEach(module => {
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = module.course_id + "_" + module.module_id + "_" + module.id;
+                checkbox.name = 'checkbox-options';
+                checkbox.value = module.name;
+                if (module.indent === 0) {
+                    checkbox.disabled = true; // Check top-level modules by default
+                }
+
+                const label = document.createElement('label');
+                label.htmlFor = module.id;
+                label.textContent = '"' + module.type + '"" ' + module.name;
+
+                const div = document.createElement('div');
+                if (module.indent > 0) {
+                    div.classList.add('indented'); // Add indentation // Highlight required modules
+                }
+                div.appendChild(checkbox);
+                div.appendChild(label);
+
+                checkboxContainer.appendChild(div);
+
+                // Add event listener to handle selecting subsequent modules
+                checkbox.addEventListener('change', () => {
+                    const isChecked = checkbox.checked;
+                    for (let i = index + 1; i < modules.length; i++) {
+                        if (modules[i].indent > module.indent) {
+                            const subsequentCheckbox = document.getElementById(modules[i].id);
+                            subsequentCheckbox.checked = isChecked;
+                        } else {
+                            break;
+                        }
+                    }
+                });
+            });
+
+            // Add a paragraph break before the action button
+            const paragraphBreak = document.createElement('br');
+            checkboxContainer.appendChild(paragraphBreak);
+
+            // Add action button at the end of the list
+            const actionButton = document.createElement('button');
+            actionButton.textContent = 'Submit Selected Module Items';
+            actionButton.addEventListener('click', () => {
+                const selectedModuleItems = [];
+                const checkboxes = document.querySelectorAll('input[name="checkbox-options"]:checked');
+                checkboxes.forEach(checkbox => {
+                    selectedModuleItems.push(checkbox.id);
+                });
+                // Perform action with selectedModules
+                console.log('Selected Module Items:', selectedModuleItems);
+                // You can send selectedModules to the server or perform any other action
+                addModuleItems(selectedModuleItems);
+            });
+            checkboxContainer.appendChild(actionButton);
+        }
+
+        // Utility function to get CSRF token
+        function getCookie(name) {
+            const cookieValue = document.cookie
+                .split('; ')
+                .find(row => row.startsWith(name + '='))
+                ?.split('=')[1];
+            return cookieValue || '';
+        }
+
+        // Function to handle selected module items
+        function addModuleItems(selectedModuleItems) {
+            // Implement the action you want to perform with the selected module items
+            // For example, you can send the selected items to the server
+            fetch('/api/add-moduleitems/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken') // CSRF protection
+                },
+                body: JSON.stringify({ modules: selectedModuleItems })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Server response:', data);
+                // Handle the server response as needed
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+    </script>
+</head>
+
+<body>
+<div class="navbar">
+    <a href="{% url 'home' %}" class="navbar-brand">Module Import TOOL</a>
+</div>
+<h1>Choose a template course from the dropdown list:</h1>
+<label for="dropdown">Choose an option:</label>
+<select id="dropdown" onchange="handleDropdownChange()">
+    <option value="">-- Select an option --</option>
+    <option value="487056">ITS Template Course</option>
+    <option value="option2">Placeholder Course</option>
+</select>
+
+
+<!-- Dynamic Checkboxes -->
+<h2>Please select module and module items to copy to your site:</h2>
+<div id="checkbox-container"></div>
+
+<div class="body-content">
+    {% block content %}
+    {% endblock %}
+    <hr/>
+</div>
+</body>
+</html>
