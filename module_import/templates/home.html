@@ -61,7 +61,7 @@
 
                 const label = document.createElement('label');
                 label.htmlFor = module.id;
-                label.textContent = '"' + module.type + '"" ' + module.name;
+                label.textContent = '"' + module.type + '" ' + module.name;
 
                 const div = document.createElement('div');
                 if (module.indent > 0) {
@@ -126,7 +126,7 @@
                     'Content-Type': 'application/json',
                     'X-CSRFToken': getCookie('csrftoken') // CSRF protection
                 },
-                body: JSON.stringify({ modules: selectedModuleItems })
+                body: JSON.stringify({ modules: selectedModuleItems, course_id: '{{ course_id }}' })
             })
             .then(response => response.json())
             .then(data => {
@@ -149,8 +149,10 @@
 <label for="dropdown">Choose an option:</label>
 <select id="dropdown" onchange="handleDropdownChange()">
     <option value="">-- Select an option --</option>
-    <option value="487056">ITS Template Course</option>
-    <option value="option2">Placeholder Course</option>
+    # Loop through the template courses and display them as options
+    {% for course in template_courses %}
+        <option value="{{ course.id }}">{{ course.name }}</option>
+    {% endfor %}
 </select>
 
 
