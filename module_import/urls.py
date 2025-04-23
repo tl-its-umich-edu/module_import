@@ -12,6 +12,6 @@ urlpatterns = [
     path(".well-known/jwks.json", jwks, name="jwks"),
     path("init/<uuid:registration_uuid>/", OIDCLoginInitView.as_view(), name="init"),
     path("ltilaunch", ApplicationLaunchView.as_view(), name="ltilaunch"),
-    path('api/add-moduleitems/', add_module_items, name='add-moduleitems'),
-    path('api/submit-selection/', submit_selection, name='submit-selection'),
+    path('api/add_module_items/', add_module_items, name='add_module_items'),
+    path('api/submit_selection/', submit_selection, name='submit_selection'),
 ]
