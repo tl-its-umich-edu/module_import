@@ -2,6 +2,33 @@
   font-weight: 600;
   color: blue;
 }
+.warning {
+  color: black;
+  padding: 10px 10px 10px 35px;  /* Increased left padding to make room for icon */
+  margin: 10px 0;
+  border: 2px solid red;
+  border-radius: 4px;
+  background-color: white;
+  display: inline-block;
+  position: relative;  /* Added for absolute positioning of pseudo-element */
+}
+
+.warning::before {
+  content: "!";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  color: white;
+  font-size: 1.2em;
+  background-color: red;
+  width: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  border-radius: 2px 0 0 2px;
+}
 
 .navbar {
   background-color: #00274C;
